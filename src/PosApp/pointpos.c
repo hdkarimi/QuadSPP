@@ -18,6 +18,19 @@
 #define MAXITR      10          /* max number of iteration for point pos */
 #define REL_HUMI    0.5         /* relative humidity for saastamoinen model */
 
+const double chisqr[100]={      /* chi-sqr(n) (alpha=0.001) */
+    10.8,13.8,16.3,18.5,20.5,22.5,24.3,26.1,27.9,29.6,
+    31.3,32.9,34.5,36.1,37.7,39.3,40.8,42.3,43.8,45.3,
+    46.8,48.3,49.7,51.2,52.6,54.1,55.5,56.9,58.3,59.7,
+    61.1,62.5,63.9,65.2,66.6,68.0,69.3,70.7,72.1,73.4,
+    74.7,76.0,77.3,78.6,80.0,81.3,82.6,84.0,85.4,86.7,
+    88.0,89.3,90.6,91.9,93.3,94.7,96.0,97.4,98.7,100 ,
+    101 ,102 ,103 ,104 ,105 ,107 ,108 ,109 ,110 ,112 ,
+    113 ,114 ,115 ,116 ,118 ,119 ,120 ,122 ,123 ,125 ,
+    126 ,127 ,128 ,129 ,131 ,132 ,133 ,134 ,135 ,137 ,
+    138 ,139 ,140 ,142 ,143 ,144 ,145 ,147 ,148 ,149
+};
+
 /* pseudorange measurement error variance ------------------------------------*/
 static double comerr(double el, int sys)
 {
@@ -25,7 +38,6 @@ static double comerr(double el, int sys)
 	//fact=sys==SYS_GLO?1.5:1.0;
     //varr=SQR(100.0)*(SQR(0.003)+SQR(0.003)/sin(el));
     //varr*=SQR(3.0); /* iono-free */
-    //return SQR(fact)*varr;
 
 	varr=1/sin(el);
 	return varr;
@@ -121,6 +133,9 @@ static int rescode(int iter, const obsd_t *obs, int n,
             continue;
         }
 
+		/* x, y, z or dts of sat is zero */
+        if (dts[i*2]==0.0) continue;
+
         /* pseudorange residual */
         v[nv]=P-(r+dtr-CLIGHT*dts[i*2]+dtrp);	/* dl=l-l0 */
         
@@ -155,6 +170,12 @@ static int valsol(const double *azel, const int *vsat, int n,
     double azels[MAXOBS*2],dop[4],vv;
     int i,ns;
 
+	/* chi-square validation of residuals */
+    vv=dot(v,v,nv);
+    if (nv>nx&&vv>chisqr[nv-nx-1]) {
+        writelog("chi-square error nv=%d vv=%.1f cs=%.1f\n",nv,vv,chisqr[nv-nx-1]);
+        return 0;
+    }
     /* large gdop check */
     for (i=ns=0;i<n;i++) {
         if (!vsat[i]) continue;

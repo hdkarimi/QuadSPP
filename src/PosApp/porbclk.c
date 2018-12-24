@@ -278,6 +278,7 @@ static int pephpos(gtime_t time, int sat, const nav_t *nav,
     }
     else {
         dts[0]=0.0;
+		return 0;
     }
     if (varc) *varc=SQR(std);
 
@@ -312,7 +313,7 @@ static int satclk(gtime_t time, int sat, const nav_t *nav, double *dt)
 	}
 	/* relativistic effect correction */
 	if (dtss[0]!=0.0) {
-		dt[0] = dtss[0]-2.0*dot(rs,rs+3,3)/CLIGHT/CLIGHT;
+		dt[0]=dtss[0]-2.0*dot(rs,rs+3,3)/CLIGHT/CLIGHT;
 	}
 
 	return 1;
@@ -413,5 +414,5 @@ extern void satposs(const obsd_t *obs, int n, const nav_t *nav,
             writelog("no ephemeris %s sat=%2d\n",time_str(obs[i].time,3),obs[i].sat);
             continue;
         }
-    }
+     }
 }
